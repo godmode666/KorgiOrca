@@ -17,6 +17,7 @@ Korgi for Orca should work with any MIDI device that sends CC messages and any M
 Create a korgi.conf. A minimal config would look something like this:
 
 ```
+device_name "AudioBox USB 96"
 knob 25
 knob 19
 ```
