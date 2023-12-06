@@ -9,6 +9,7 @@ Korgi for Orca should work with any MIDI device that sends CC messages and any M
 ## Building
 
 `cmake .`
+
 `cmake --build .`
 
 ## Configuration
@@ -23,7 +24,7 @@ Available directives:
 
 `device <id>`: specifies the MIDI device ID to use, starting at 0 (on Windows). Note: Windows support is currently untested
 
-`device_name <name>`: specifies the MIDI device name (on Linux). Note: run "amidi -l" to get device names. Do not include "MIDI 1" if your device ends with this. 
+`device_name <name>`: specifies the MIDI device name (on Linux). Note: run `amidi -l` to get device names. Do not include `MIDI 1` if your device name ends with this. 
 
 `device_map <name>`: specifies the mapping from control names to MIDI channels. Currently, only one mapping is supported, for the `nanoKONTROL2` device. Without a mapping, you can specify controls by their channel index.
 
