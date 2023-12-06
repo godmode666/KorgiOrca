@@ -541,11 +541,14 @@ bool ReadConfigFile()
 				continue;
 			}
 
+			static int knobi = 0;
+
 			KnobMapping mapping;
 			mapping.min_value = (!vmin) ? 0 : float(atof(vmin));
 			mapping.max_value = (!vmax) ? 35 : float(atof(vmax));
 			mapping.x = (!vx) ? 3: atoi(vx);
-			mapping.y = (!vy) ? atoi(channel) - 20: atoi(vy);
+			mapping.y = (!vy) ? knobi + 1: atoi(vy);
+			knobi = knobi + 1;
 
 			char *endptr = nullptr;
 			int c = strtol(channel, &endptr, 10);
