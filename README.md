@@ -1,6 +1,6 @@
 # Korgi for Orca
 
-Korgi for Orca is a tool that converts CC messages from a MIDI controller and sends them to the Orca MIDI sequencer as UDP commands. This allows you to "bind" MIDI knobs or sliders to Orca coordinates, operate on the values with Orca operators and change the values in real time with your knobs or sliders.
+Korgi for Orca is a tool that converts CC messages from a MIDI controller and sends them to the [Orca MIDI sequencer](https://100r.co/site/orca.html) as UDP commands. This allows you to "bind" MIDI knobs or sliders to Orca coordinates, operate on the values with Orca operators and change the values in real time with your knobs or sliders.
 
 ## Compatibility
 
