@@ -23,6 +23,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define NOMINMAX
 
+#include <string>
 #include <stdio.h>
 #include <thread>
 
@@ -74,18 +75,18 @@ bool g_terminate = false;
 
 struct KnobMapping
 {
-	std::string name;
 	float min_value;
 	float max_value;
+	int x;
+	int y;
 };
 
 struct KorgiConfig
 {
 	string address = "127.0.0.1";
-	int port = 27910;
-	string password;
+	int port = 49160;
 	int device = 0;
-	string device_name = "nanoKONTROL2";
+	string device_name = "AudioBox USB 96";
 	unordered_map<int, string> buttons;
 	unordered_map<int, KnobMapping> knobs;
 } g_config;
@@ -131,52 +132,39 @@ void CloseSocket()
 void HandleMidiInput(unsigned char midiChannel, unsigned char midiValue)
 {
 	static char previousChannel = -1;
-	if (previousChannel == midiChannel)
-		printf("\r");
-	else
-		printf("\n");
-	previousChannel = midiChannel;
-
 	char command[256];
 	command[0] = 0;
 
-	const auto& button = g_config.buttons.find(midiChannel);
 	const auto& knob = g_config.knobs.find(midiChannel);
 
-	if (button != g_config.buttons.end())
-	{
-		if (midiValue > 0)
-		{
-			strcpy_s(command, button->second.c_str());
-
-			printf("korgi: button %u \"%s\"", midiChannel, button->second.c_str());
-		}
-	}
-	else if (knob != g_config.knobs.end())
+	if (knob != g_config.knobs.end())
 	{
 		float fvalue = (float)midiValue / 127.f;
 		fvalue = max(0.f, min(1.f, fvalue));
 
+		// scale cc value
 		float variable_value = knob->second.min_value * (1.f - fvalue) + knob->second.max_value * fvalue;
-		sprintf_s(command, "%s %.3f", knob->second.name.c_str(), variable_value);
 
-		printf("korgi: knob %u \"%s\"   ", midiChannel, command);
-	}
-	else
-	{ 
-		printf("korgi: channel %u unmapped value %d   ", midiChannel, midiValue);
+		// convert scaled value to base 36
+		char glyph = char(int(variable_value) + (int(variable_value) < 10 ? 48 : 87));
+
+		//build orca write command write:glyph;x;y
+		sprintf_s(command, "write:%c;%i;%i", glyph, knob->second.x, knob->second.y);
+
+		(previousChannel == midiChannel) ? printf("\r") : printf("\n");
+		previousChannel = midiChannel;
+		printf("korgi: cc %u value %i command \"%s\"", midiChannel, int(variable_value), command);
 	}
 
 	if (*command)
 	{
 		char udp_message[256];
-		sprintf_s(udp_message, "\xff\xff\xff\xffrcon %s %s", g_config.password.c_str(), command);
+		sprintf_s(udp_message, "%s", command);
 
+		// send UDP message
 		sendto(g_SendSocket, udp_message, int(strlen(udp_message)) + 1, 0, (sockaddr*)&g_sendToAddr, sizeof(g_sendToAddr));
 	}
 
-	// Don't want to buffer output since we want concolse output to match what's
-	// going across UDP pipe in terms of update-parity
 	fflush(0);
 }
 
@@ -455,19 +443,6 @@ bool ReadConfigFile()
 			new_config.address = addr;
 			if (port) new_config.port = atoi(port);
 		}
-		else if (strcmp(command, "password") == 0)
-		{
-			char* password = tokenize(nullptr, delimiters);
-
-			if (!password)
-			{
-				fprintf(stderr, "%s:%d: insufficient parameters for 'password'\n", g_configFileName.c_str(), lineno);
-				success = false;
-				continue;
-			}
-
-			new_config.password = password;
-		}
 		else if (strcmp(command, "device") == 0)
 		{
 			char* device = tokenize(nullptr, delimiters);
@@ -554,11 +529,12 @@ bool ReadConfigFile()
 			bool isKnob = strcmp(command, "knob") == 0;
 
 			char* channel = tokenize(nullptr, delimiters);
-			char* cvar = tokenize(nullptr, delimiters);
-			char* vmin = tokenize(nullptr, delimiters);
 			char* vmax = tokenize(nullptr, delimiters);
+			char* vmin = tokenize(nullptr, delimiters);
+			char* vx = tokenize(nullptr, delimiters);
+			char* vy = tokenize(nullptr, delimiters);
 
-			if (!channel || !cvar || !vmin || !vmax)
+			if (!channel)
 			{
 				fprintf(stderr, "%s:%d: insufficient parameters for '%s'\n", g_configFileName.c_str(), lineno, command);
 				success = false;
@@ -566,9 +542,10 @@ bool ReadConfigFile()
 			}
 
 			KnobMapping mapping;
-			mapping.name = cvar;
-			mapping.min_value = float(atof(vmin));
-			mapping.max_value = float(atof(vmax));
+			mapping.min_value = (!vmin) ? 0 : float(atof(vmin));
+			mapping.max_value = (!vmax) ? 35 : float(atof(vmax));
+			mapping.x = (!vx) ? 3: atoi(vx);
+			mapping.y = (!vy) ? atoi(channel) - 20: atoi(vy);
 
 			char *endptr = nullptr;
 			int c = strtol(channel, &endptr, 10);
@@ -605,12 +582,6 @@ bool ReadConfigFile()
 	}
 
 	fclose(file);
-
-	if (new_config.password.size() == 0)
-	{
-		fprintf(stderr, "%s: password not specified\n", g_configFileName.c_str());
-		success = false;
-	}
 
 	if (success)
 	{
