@@ -12,6 +12,18 @@ Korgi for Orca should work with any MIDI device that sends CC messages and any M
 
 `cmake --build .`
 
+## Using
+
+Create a korgi.conf. A minimal config would look something like this:
+
+```knob 25
+knob 19```
+
+This will map 2 knobs, CC 25 and CC 19. They will both be scaled from 0-35. They will be placed in a column started at 4,1. 
+
+Start orca, and then start korgi. When you change your knobs you should see the values appear in Orca. No midi routing is needed and the external MIDI transport and clock funtionality in Orca will still work, even when using the same device as korgi.
+
+
 ## Configuration
 
 Korgi reads its configuration from a plain text file, by default `korgi.conf` in the current directory. An alternative file name can be specified as the only supported parameter on the command line.
