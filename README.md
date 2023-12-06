@@ -16,8 +16,10 @@ Korgi for Orca should work with any MIDI device that sends CC messages and any M
 
 Create a korgi.conf. A minimal config would look something like this:
 
-```knob 25
-knob 19```
+```
+knob 25
+knob 19
+```
 
 This will map 2 knobs, CC 25 and CC 19. They will both be scaled from 0-35. They will be placed in a column started at 4,1. 
 
