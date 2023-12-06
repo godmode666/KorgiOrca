@@ -528,7 +528,7 @@ bool ReadConfigFile()
 		{
 			bool isKnob = strcmp(command, "knob") == 0;
 
-	//		char* channel = tokenize(nullptr, delimiters);
+			char* channel = tokenize(nullptr, delimiters);
 			char* vmax = tokenize(nullptr, delimiters);
 			char* vmin = tokenize(nullptr, delimiters);
 			char* vx = tokenize(nullptr, delimiters);
